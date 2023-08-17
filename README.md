@@ -1,14 +1,14 @@
 # CopyAs
 
-[Hiew](https://hiew.ru) External Module (HEM) to copy block data in different formats.
+[Hiew](https://hiew.io) External Module (HEM) to copy block data in different formats.
 
 ## Installation
 
-Download the `.hem` file and put it in your HIEW `hem` folder.
+Download the `.hem` file and put it in your Hiew `hem` folder.
 
 ## Usage
 
-After opening a file in HIEW, mark a block, press `F11` to load a Hiew module and choose it from the menu.
+After opening a file in Hiew, mark a block, press `F11` to load a Hiew module and choose it from the menu.
 The marked block data will be shown in different formats. Press `F5` to copy a string to clipboard.
 
 ### Example
