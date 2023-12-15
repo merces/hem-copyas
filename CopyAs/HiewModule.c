@@ -56,8 +56,9 @@ static int ShowHelp(VOID) {
         "",
         "Options:",
         "",
-        "   F1 - Show this Help text.",
-        "   F5 - Copy selected formatted string to clipboard.",
+        "   F1    - Show this Help text.",
+        "   ENTER - Copy selected formatted string to clipboard",
+        "           and close the window.",
     };
 
     static CHAR title[64] = HEM_MODULE_NAME; // In case StringCchPrintfA() fails, we still have a title :)
@@ -241,7 +242,7 @@ int HEM_API Hem_EntryPoint(HEMCALL_TAG* HemCall) {
 
     // Keys setup
     //                    "123456789ABC|F1____F2____F3____F4____F5____F6____F7____F8____F9____F10___F11___F12___"
-    HEM_FNKEYS fnKeys = { "100010000000|Help                    Copy                                            ",   // main Fn
+    HEM_FNKEYS fnKeys = { "100010000000|Help                                                                    ",   // main Fn
                   "",   // no Alt-Fn
                   "",   // no Ctrl-Fn
                   ""};  // no Shift-Fn
@@ -260,9 +261,13 @@ int HEM_API Hem_EntryPoint(HEMCALL_TAG* HemCall) {
     HEM_UINT pressedFnKey;
 
     int item = 1; // Just a reminder menu items start at 1 (not 0)
+
     while (item = HiewGate_Menu(HEM_MODULE_FULL_NAME, lines, _countof(lines), 40, item, &fnKeys, &pressedFnKey, NULL, NULL)) {
-        if (!pressedFnKey)
-            continue;
+        if (item == HEM_INPUT_ESC)
+            break;
+
+        if (pressedFnKey == 0)
+            break;
 
         switch (pressedFnKey) {
         case HEM_FNKEY_F1:
@@ -275,6 +280,11 @@ int HEM_API Hem_EntryPoint(HEMCALL_TAG* HemCall) {
         default:
             break;
         }
+    }
+
+    if (item > 0) {
+        if (!SendTextToClipboard(lines[--item])) // Menu items start 1, but arrays still start at 0 :)
+            HiewGate_Message("Error", "SendTextToClipboard() failed");
     }
 
     cleanup:
