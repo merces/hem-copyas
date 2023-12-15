@@ -5,7 +5,7 @@
 
 // HEM SDK required defs
 
-#define HEM_MODULE_VERSION_MAJOR 1
+#define HEM_MODULE_VERSION_MAJOR 2
 #define HEM_MODULE_VERSION_MINOR 0
 #define HEM_MODULE_NAME "CopyAs"
 #define HEM_MODULE_FULL_NAME "CopyAs"
@@ -51,6 +51,7 @@ static int ShowHelp(VOID) {
         "- Hex string (escaped)",
         "- C array",
         "- C string (escaped non-ASCII)",
+        "- VB.NET byte array",
         "",
         "Author: "HEM_MODULE_AUTHOR,
         "",
@@ -125,8 +126,8 @@ int HEM_API Hem_EntryPoint(HEMCALL_TAG* HemCall) {
     HEM_UINT BufferSize;
     HIEWGATE_GETDATA HiewData;
     HEM_BYTE* Buffer;
-    LPSTR asHex, asHexSpaces, asHexEscaped, asHexCArray, asEscapedStr;
-    asHex = asHexSpaces = asHexEscaped = asHexCArray = asEscapedStr = NULL;
+    LPSTR asHex, asHexSpaces, asHexEscaped, asHexCArray, asEscapedStr, asVBByteArray;
+    asHex = asHexSpaces = asHexEscaped = asHexCArray = asEscapedStr = asVBByteArray = NULL;
 
     if (HemCall->cbSize < sizeof(HEMCALL_TAG))
         return HEM_ERROR;
@@ -159,7 +160,7 @@ int HEM_API Hem_EntryPoint(HEMCALL_TAG* HemCall) {
     ULONG i; // Used as for loops counter but also used to remove trailing characters from final strings
     ULONG j; // Used in asEscapedStr only
 
-    // Hex
+    // Hex bytes (no spaces)
     asHex = HiewGate_GetMemory(BufferSize * 2 + 1); // 2 characters: "42"
     if (!asHex) {
         HiewGate_Message("Error", "Memory allocation error");
@@ -173,7 +174,7 @@ int HEM_API Hem_EntryPoint(HEMCALL_TAG* HemCall) {
         }
     }
 
-    // Hex space-delimited
+    // Hex bytes (space-separated)
     asHexSpaces = HiewGate_GetMemory(BufferSize * 3 + 1); // 3 characters: "42 "
     if (!asHexSpaces) {
         HiewGate_Message("Error", "Memory allocation error");
@@ -188,7 +189,7 @@ int HEM_API Hem_EntryPoint(HEMCALL_TAG* HemCall) {
     }
     asHexSpaces[i * 3 - 1] = '\0'; // Remove trailing space character
 
-    // Hex escaped string
+    // Hex string (escaped)
     asHexEscaped = HiewGate_GetMemory(BufferSize * 4 + 1); // 4 characters: "\x42"
     if (!asHexEscaped) {
         HiewGate_Message("Error", "Memory allocation error");
@@ -217,7 +218,7 @@ int HEM_API Hem_EntryPoint(HEMCALL_TAG* HemCall) {
     }
     asHexCArray[i * 6 - 2] = '\0'; // Remove trailing comma and space characters
 
-    // C string (escaped)
+    // C string (escaped non-ASCII)
     asEscapedStr = HiewGate_GetMemory(BufferSize * 4 + 1); // 1 character: "B", but it'll hold 4 characters for non-printable bytes: "\x0d"
     if (!asEscapedStr) {
         HiewGate_Message("Error", "Memory allocation error");
@@ -238,6 +239,22 @@ int HEM_API Hem_EntryPoint(HEMCALL_TAG* HemCall) {
     }
     asEscapedStr[j] = '\0';
 
+    // VB.NET byte array
+    asVBByteArray = HiewGate_GetMemory(BufferSize * 6 + 1); // 6 characters: "&H42, "
+    if (!asVBByteArray) {
+        HiewGate_Message("Error", "Memory allocation error");
+        goto cleanup;
+    }
+
+    for (i = 0; i < BufferSize; i++) {
+        if (FAILED(StringCchPrintfA(asVBByteArray + i * 6, BufferSize * 6 + 1, "&H%02X, ", Buffer[i]))) {
+            HiewGate_Message("Error", "StringCchPrintfA() failed: asVBByteArray");
+            goto cleanup;
+        }
+    }
+    asVBByteArray[i * 6 - 2] = '\0'; // Remove trailing comma and space characters
+
+
     // Menu code
 
     // Keys setup
@@ -254,6 +271,7 @@ int HEM_API Hem_EntryPoint(HEMCALL_TAG* HemCall) {
         asHexEscaped,
         asHexCArray,
         asEscapedStr,
+        asVBByteArray,
     };
 
     // Menu loop
@@ -273,10 +291,6 @@ int HEM_API Hem_EntryPoint(HEMCALL_TAG* HemCall) {
         case HEM_FNKEY_F1:
             ShowHelp();
             break;
-        case HEM_FNKEY_F5:
-            if (!SendTextToClipboard(lines[item - 1]))
-                HiewGate_Message("Error", "SendTextToClipboard() failed");
-            break;
         default:
             break;
         }
@@ -294,5 +308,6 @@ int HEM_API Hem_EntryPoint(HEMCALL_TAG* HemCall) {
     HiewGate_FreeMemory(asHexEscaped);
     HiewGate_FreeMemory(asHexCArray);
     HiewGate_FreeMemory(asEscapedStr);
+    HiewGate_FreeMemory(asVBByteArray);
     return HEM_OK;
 }
