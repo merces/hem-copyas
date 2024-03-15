@@ -16,6 +16,11 @@ the window.
 
 ![](assets/hem-copyas_200.png)
 
+## Requirements
+
+- Licensed version of Hiew.
+- Windows XP or later.
+
 ## Author
 
 Fernando Mercês - https://x.com/@mer0x36
